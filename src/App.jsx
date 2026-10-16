@@ -1,6 +1,32 @@
+import { useEffect, useState } from 'react'
 import './App.css'
+import Login from './Login'
+import UserPanel from './UserPanel'
+import AdminPanel from './AdminPanel'
+import { supabase } from './lib/supabase'
 
 function App() {
+    const [events, setEvents] = useState([])
+  const [eventsLoading, setEventsLoading] = useState(true)
+
+  useEffect(() => {
+    loadEvents()
+  }, [])
+
+  async function loadEvents() {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .order('starts_at', { ascending: true })
+
+    if (error) {
+      console.error('Sündmuste laadimise viga:', error)
+    } else {
+      setEvents(data || [])
+    }
+
+    setEventsLoading(false)
+  }
   return (
     <div className="site">
       <header className="header">
@@ -19,6 +45,16 @@ function App() {
             <a href="#uudised">Uudised</a>
             <a href="#foorum">Foorum</a>
             <a href="#meist">Meist</a>
+   <button
+  type="button"
+  onClick={() => {
+    document.getElementById('login')?.scrollIntoView({
+      behavior: 'smooth',
+    })
+  }}
+>
+  Logi sisse
+</button>
           </nav>
 
           <button className="login-button">
@@ -68,71 +104,116 @@ function App() {
         </section>
 
         <section className="section" id="sundmused">
-          <div className="container">
-            <div className="section-header">
-              <div>
-                <p className="eyebrow">MIS TOIMUB?</p>
-                <h2>Tulevased sündmused</h2>
+  <div className="container">
+    <div className="section-header">
+      <div>
+        <p className="eyebrow">MIS TOIMUB?</p>
+        <h2>Tulevased sündmused</h2>
+      </div>
+
+      <a href="#koik-sundmused" className="more-link">
+  Kõik sündmused →
+</a>
+    </div>
+
+    {eventsLoading ? (
+      <p>Laen sündmusi...</p>
+    ) : events.length === 0 ? (
+      <p>Hetkel tulevasi sündmusi ei ole.</p>
+    ) : (
+      <div className="events">
+        {events.slice(0, 3).map((event) => {
+          const eventDate = new Date(event.starts_at)
+
+          const day = eventDate.toLocaleDateString('et-EE', {
+            day: '2-digit',
+          })
+
+          const month = eventDate
+            .toLocaleDateString('et-EE', {
+              month: 'short',
+            })
+            .toUpperCase()
+            .replace('.', '')
+
+          return (
+            <article className="event" key={event.id}>
+              <div className="date">
+                <strong>{day}</strong>
+                <span>{month}</span>
               </div>
 
-              <a href="#sundmused" className="more-link">
-                Kõik sündmused →
-              </a>
-            </div>
+              <div>
+                <span className="tag">KOGUKONNAÜRITUS</span>
 
-            <div className="events">
-              <article className="event">
-                <div className="date">
-                  <strong>24</strong>
-                  <span>JUUNI</span>
-                </div>
+                <h3>{event.title_et}</h3>
 
-                <div>
-                  <span className="tag">KOGUKONNAÜRITUS</span>
-                  <h3>Tihemetsa jaanipäev</h3>
-                  <p>
-                    Ühine jaanipäeva tähistamine, muusika,
-                    lõke ja hea seltskond.
-                  </p>
-                  <small>📍 Tihemetsa</small>
-                </div>
-              </article>
+                <p>{event.description_et}</p>
 
-              <article className="event">
-                <div className="date">
-                  <strong>15</strong>
-                  <span>JUULI</span>
-                </div>
+                {event.location && (
+                  <small>📍 {event.location}</small>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    )}
+  </div>
+</section>
 
-                <div>
-                  <span className="tag">KOGUKOND</span>
-                  <h3>Suveõhtu saunas</h3>
-                  <p>
-                    Mõnus õhtu kogukonna sauna ja hea
-                    seltskonnaga.
-                  </p>
-                  <small>📍 Tihemetsa</small>
-                </div>
-              </article>
+<section className="section" id="koik-sundmused">
+  <div className="container">
+    <div className="section-header">
+      <div>
+        <p className="eyebrow">KALENDER</p>
+        <h2>Kõik tulevased sündmused</h2>
+      </div>
+    </div>
 
-              <article className="event">
-                <div className="date">
-                  <strong>03</strong>
-                  <span>AUG</span>
-                </div>
+    {eventsLoading ? (
+      <p>Laen sündmusi...</p>
+    ) : events.length === 0 ? (
+      <p>Hetkel tulevasi sündmusi ei ole.</p>
+    ) : (
+      <div className="events">
+        {events.slice(0, 3).map((event) => {
+          const eventDate = new Date(event.starts_at)
 
-                <div>
-                  <span className="tag">TALGUD</span>
-                  <h3>Tihemetsa talgupäev</h3>
-                  <p>
-                    Teeme koos meie kodukohta paremaks.
-                  </p>
-                  <small>📍 Tihemetsa</small>
-                </div>
-              </article>
-            </div>
-          </div>
-        </section>
+          const day = eventDate.toLocaleDateString('et-EE', {
+            day: '2-digit',
+          })
+
+          const month = eventDate
+            .toLocaleDateString('et-EE', {
+              month: 'short',
+            })
+            .toUpperCase()
+            .replace('.', '')
+
+          return (
+            <article className="event" key={event.id}>
+              <div className="date">
+                <strong>{day}</strong>
+                <span>{month}</span>
+              </div>
+
+              <div>
+                <span className="tag">KOGUKONNAÜRITUS</span>
+                <h3>{event.title_et}</h3>
+                <p>{event.description_et}</p>
+
+                {event.location && (
+                  <small>📍 {event.location}</small>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    )}
+  </div>
+</section>
 
         <section className="section news-section" id="uudised">
           <div className="container">
@@ -197,6 +278,12 @@ function App() {
             </p>
           </div>
         </section>
+        <section id="login" className="login-section">
+  <Login />
+</section>
+
+<UserPanel />
+
       </main>
 
       <footer className="footer">
